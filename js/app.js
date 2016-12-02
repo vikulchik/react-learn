@@ -17,12 +17,12 @@ const myNews = [
     }
 ];
 
+window.ee = new EventEmitter();
+
 class Article extends React.Component {
     render() {
         const author = this.props.data.author;
         const text = this.props.data.text;
-        const bigText = this.props.data.bigText;
-
         return(
             <div className="article">
                 <p className="news-author">{author}:</p>
@@ -33,21 +33,74 @@ class Article extends React.Component {
 
 }
 
-class InputShow extends React.Component {
+class Add extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            agreeNotChecked: true,
+            authorIsEmpty: true,
+            textIsEmpty: true
+        }
+    }
+    componentDidMount() {
+    ReactDOM.findDOMNode(this.refs.author).focus();
+};
     sendMyNews = (e) => {
-      alert(ReactDOM.findDOMNode(this.refs.myInput).value);
+     e.preventDefault();
+        let author = ReactDOM.findDOMNode(this.refs.author).value;
+        let text = ReactDOM.findDOMNode(this.refs.text).value;
+
+        const item = [
+            {
+                author: author,
+                text: text
+            }
+        ];
+        window.ee.emit('News.add', item);
+    };
+    onChecked = (e) => {
+          e.preventDefault();
+          this.setState({agreeNotChecked: !this.state.agreeNotChecked});
+    };
+    onAuthorChange = (e) => {
+        if (e.target.value.trim().length > 0 ) {
+            this.setState({authorIsEmpty: false})
+        }else  {
+            this.setState({authorIsEmpty: true})
+        }
+    };
+    onTextChange = (e) => {
+        if (e.target.value.trim().length > 0 ) {
+            this.setState({textIsEmpty: false})
+        }else  {
+            this.setState({textIsEmpty: true})
+        }
     };
     render() {
+        let agreeNotChecked = this.state.agreeNotChecked,
+            authorIsEmpty = this.state.authorIsEmpty,
+            textIsEmpty = this.state.textIsEmpty;
         return (
-            <div className="send-news">
+            <form className="send-news">
                 <input
-                    className="input"
-                    placeholder="Пиши здесь"
+                    className="add-author"
+                    placeholder="Имя"
                     defaultValue=""
-                    ref="myInput"
+                    ref="author"
+                    onChange={this.onAuthorChange}
                 />
-                <button onClick={this.sendMyNews} ref="alert_button">Отправить</button>
-            </div>
+                <textarea
+                className="add-text"
+                ref="text"
+                placeholder="Новость"
+                defaultValue=""
+                onChange={this.onTextChange}>
+                </textarea>
+                <label className="add-label"> Я согласен с правилами
+                    <input className="add-check" type="checkbox" ref="checkrule" onChange={this.onChecked}/>
+                </label>
+                <button onClick={this.sendMyNews} ref="alert_button" disabled={agreeNotChecked || authorIsEmpty || textIsEmpty}>Добавить новость</button>
+            </form>
         )
     }
 }
@@ -78,12 +131,28 @@ class News extends React.Component {
 }
 
 class App extends  React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+           news: myNews
+        }
+    }
+    componentDidMount() {
+        const self = this;
+        window.ee.addListener('News.add', (item) => {
+            let nextNews = item.concat(self.state.news);
+            self.setState({news: nextNews});
+        })
+    }
+    componentWillUnmount() {
+        window.ee.removeListener('News.add');
+    }
     render() {
         return (
             <div className="app">
                 <h1>Обновление новостей</h1>
-                <InputShow/>
-                <News data={myNews}/>
+                <Add/>
+                <News data={this.state.news}/>
             </div>
         )
     }

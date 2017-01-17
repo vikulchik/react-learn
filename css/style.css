@@ -26,7 +26,7 @@ body {
 }
 
 .input {
-    width: 200px;
+    width: 100px;
     padding: 5px 15px ;
     border-radius: 3px;
     background-color: white;
@@ -48,7 +48,7 @@ body {
 
 .add-author, .add-text {
     display: block;
-    width: 300px;
+    width: 400px;
     padding: 5px 15px;
     margin-bottom: 20px;
     border-radius: 5px;
